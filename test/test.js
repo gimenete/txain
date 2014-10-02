@@ -1,5 +1,6 @@
 var txain = require('../')
 var assert = require('assert')
+var _ = require('underscore')
 
 describe('Test the whole thing', function() {
 
@@ -30,6 +31,153 @@ describe('Test the whole thing', function() {
       callback(null)
     }).end(function(err, a) {
       assert.equal(a, undefined)
+      done()
+    })
+
+  })
+
+  it('sets and gets values from the chain', function(done) {
+
+    txain(function(callback) {
+      this.set('foo', 100)
+      callback()
+    }).then(function(callback) {
+      callback()
+    }).then(function(callback) {
+      assert.equal(this.get('foo'), 100)
+      callback()
+    }).end(function(err, a) {
+      assert.ifError(err)
+      assert.equal(this.get('foo'), 100)
+      done()
+    })
+
+  })
+
+  it('implements the each function', function(done) {
+
+    var iterations = 0
+    txain(function(callback) {
+      callback(null, ['aa', 'ab', 'bc'])
+    }).each(function(item, callback) {
+      iterations++
+      callback()
+    }).then(function(items, foo, callback) {
+      assert.equal(items, undefined)
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      assert.equal(iterations, 3)
+      done()
+    })
+
+  })
+
+  it('implements the map function', function(done) {
+
+    txain(function(callback) {
+      callback(null, ['a', 'b', 'c'])
+    }).map(function(item, callback) {
+      callback(null, '#'+item)
+    }).then(function(items, foo, callback) {
+      assert.ok(_.isEqual(items, ['#a', '#b', '#c']))
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+
+  })
+
+  it('implements the filter function', function(done) {
+
+    txain(function(callback) {
+      callback(null, ['aa', 'ab', 'bc'])
+    }).filter(function(item, callback) {
+      callback(null, item.substring(0, 1) === 'a')
+    }).then(function(items, foo, callback) {
+      assert.ok(_.isEqual(items, ['aa', 'ab']))
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+
+  })
+
+  it('implements the reject function', function(done) {
+
+    txain(function(callback) {
+      callback(null, ['aa', 'ab', 'bc'])
+    }).reject(function(item, callback) {
+      callback(null, item.substring(0, 1) !== 'a')
+    }).then(function(items, foo, callback) {
+      assert.ok(_.isEqual(items, ['aa', 'ab']))
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+
+  })
+
+  it('implements the concat function', function(done) {
+
+    txain(function(callback) {
+      callback(null, ['a', 'b', 'c'])
+    }).concat(function(item, callback) {
+      callback(null, [item, '#'+item])
+    }).then(function(items, foo, callback) {
+      assert.ok(_.isEqual(items, ['a', '#a', 'b', '#b', 'c', '#c']))
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+
+  })
+
+  it('implements the detect function', function(done) {
+
+    var iterations = 0
+    txain(function(callback) {
+      callback(null, ['aa', 'ab', 'bc'])
+    }).detect(function(item, callback) {
+      iterations++
+      callback(null, item === 'ab')
+    }).then(function(detected, foo, callback) {
+      assert.equal(detected, 'ab')
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      assert.equal(iterations, 2)
+      done()
+    })
+
+  })
+
+  it('runs the end() function when an error happens iterating', function(done) {
+
+    var iterations = 0
+    txain(function(callback) {
+      callback(null, ['aa', 'ab', 'bc'])
+    }).detect(function(item, callback) {
+      iterations++
+      if (item === 'ab') return callback(new Error('foo'))
+      callback(null, item === 'ab')
+    }).then(function(detected, foo, callback) {
+      assert.equal(detected, 'ab')
+      assert.equal(foo, undefined)
+      callback()
+    }).end(function(err) {
+      assert.ok(err)
+      assert.equal(iterations, 2)
       done()
     })
 

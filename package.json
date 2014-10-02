@@ -1,13 +1,13 @@
 {
   "name": "txain",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A simple module for async control flow",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "node node_modules/istanbul/lib/cli.js cover node_modules/.bin/_mocha -- -R spec"
+    "test": "node node_modules/.bin/_mocha -R spec"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/gimenete/txain",
   "devDependencies": {
     "istanbul": "^0.3.2",
-    "mocha": "^1.21.4"
+    "mocha": "^1.21.4",
+    "underscore": "^1.7.0"
   }
 }
