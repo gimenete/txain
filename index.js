@@ -1,5 +1,5 @@
 module.exports = function(f) {
-  var pro = {}
+  var tx = {}
   var chain = []
   var end = null
   var values = {}
@@ -8,12 +8,12 @@ module.exports = function(f) {
   function callNext() {
     var f = chain.shift()
     if (!f) {
-      end.apply(pro, arguments)
+      end.apply(tx, arguments)
     } else {
       var args = Array.prototype.slice.call(arguments)
       var err = args.shift()
       if (err) {
-        end.call(pro, err)
+        end.call(tx, err)
       } else {
         // remove arguments if needed
         if (args.length >= f.length) {
@@ -25,7 +25,7 @@ module.exports = function(f) {
           }
         }
         args.push(callNext)
-        f.apply(pro, args)
+        f.apply(tx, args)
       }
     }
   }
@@ -38,7 +38,7 @@ module.exports = function(f) {
         if (items.length > 0) {
           var item = items.shift()
           f(item, function(err, value) {
-            if (err) return end.call(pro, err)
+            if (err) return end.call(tx, err)
             var stop = collector(item, value)
             if (stop) {
               finish(callback)
@@ -54,17 +54,17 @@ module.exports = function(f) {
     })
   }
 
-  pro.each = function(f) {
+  tx.each = function(f) {
     collect(f,
       function(item, value) {},
       function(callback) {
         callback(null)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.map = function(f) {
+  tx.map = function(f) {
     var result = []
     collect(f,
       function(item, value) {
@@ -73,10 +73,10 @@ module.exports = function(f) {
         callback(null, result)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.reject = function(f) {
+  tx.reject = function(f) {
     var result = []
     collect(f,
       function(item, value) {
@@ -87,10 +87,10 @@ module.exports = function(f) {
         callback(null, result)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.filter = function(f) {
+  tx.filter = function(f) {
     var result = []
     collect(f,
       function(item, value) {
@@ -101,10 +101,10 @@ module.exports = function(f) {
         callback(null, result)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.detect = function(f) {
+  tx.detect = function(f) {
     var detected
     collect(f,
       function(item, value) {
@@ -116,10 +116,10 @@ module.exports = function(f) {
         callback(null, detected)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.concat = function(f) {
+  tx.concat = function(f) {
     var result = []
     collect(f,
       function(item, value) {
@@ -128,15 +128,15 @@ module.exports = function(f) {
         callback(null, result)
       }
     )
-    return pro
+    return tx
   }
 
-  pro.then = function(f) {
+  tx.then = function(f) {
     chain.push(f)
-    return pro
+    return tx
   }
  
-  pro.end = function(f) {
+  tx.end = function(f) {
     end = f
     if (initial) {
       callNext.apply(null, initial)
@@ -145,18 +145,18 @@ module.exports = function(f) {
     }
   }
 
-  pro.set = function(key, value) {
+  tx.set = function(key, value) {
     values[key] = value
   }
 
-  pro.get = function(key) {
+  tx.get = function(key) {
     return values[key]
   }
  
   if (typeof f === 'function') {
-    pro.then(f)
+    tx.then(f)
   } else {
     initial = [null].concat(Array.prototype.slice.call(arguments))
   }
-  return pro
+  return tx
 }
