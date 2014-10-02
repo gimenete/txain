@@ -3,6 +3,7 @@ module.exports = function(f) {
   var chain = []
   var end = null
   var values = {}
+  var initial = null
  
   function callNext() {
     var f = chain.shift()
@@ -137,7 +138,11 @@ module.exports = function(f) {
  
   pro.end = function(f) {
     end = f
-    callNext()
+    if (initial) {
+      callNext.apply(null, initial)
+    } else {
+      callNext()
+    }
   }
 
   pro.set = function(key, value) {
@@ -148,5 +153,10 @@ module.exports = function(f) {
     return values[key]
   }
  
-  return pro.then(f)
+  if (typeof f === 'function') {
+    pro.then(f)
+  } else {
+    initial = [null].concat(Array.prototype.slice.call(arguments))
+  }
+  return pro
 }

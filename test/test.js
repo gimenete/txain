@@ -183,4 +183,40 @@ describe('Test the whole thing', function() {
 
   })
 
+  it('lets create a txain with an array', function(done) {
+
+    var iterations = 0
+    txain(['aa', 'ab', 'bc'])
+      .each(function(item, callback) {
+        iterations++
+        callback()
+      }).then(function(foo, callback) {
+        assert.equal(foo, undefined)
+        callback()
+      }).end(function(err) {
+        assert.ifError(err)
+        assert.equal(iterations, 3)
+        done()
+      })
+
+  })
+
+  it('lets create a txain with any number of arguments', function(done) {
+
+    txain('a', 'b', 'c')
+      .then(function(a, b, c, callback) {
+        assert.equal(a, 'a')
+        assert.equal(b, 'b')
+        assert.equal(c, 'c')
+        callback()
+      }).then(function(foo, callback) {
+        assert.equal(foo, undefined)
+        callback()
+      }).end(function(err) {
+        assert.ifError(err)
+        done()
+      })
+
+  })
+
 })
