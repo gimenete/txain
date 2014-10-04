@@ -15,13 +15,15 @@ module.exports = function(f) {
       if (err) {
         end.call(tx, err)
       } else {
-        // remove arguments if needed
-        if (args.length >= f.length) {
-          args = args.splice(0, f.length - 1)
-        } else {
-          // add arguments if needed
-          for (var i = args.length; i < f.length - 1; i++) {
-            args.push(void 0)
+        if (!f.debug) {
+          // remove arguments if needed
+          if (args.length >= f.length) {
+            args = args.splice(0, f.length - 1)
+          } else {
+            // add arguments if needed
+            for (var i = args.length; i < f.length - 1; i++) {
+              args.push(void 0)
+            }
           }
         }
         args.push(callNext)
@@ -30,14 +32,17 @@ module.exports = function(f) {
     }
   }
 
-  function collect(f, collector, finish) {
+  function collect(args, collector, finish) {
+    var args = Array.prototype.slice.call(args)
+    var f = args.shift()
     chain.push(function(items, callback) {
       var result = []
 
       function next() {
         if (items.length > 0) {
           var item = items.shift()
-          f(item, function(err, value) {
+          var argmnts = [item].concat(args)
+          argmnts.push(function(err, value) {
             if (err) return end.call(tx, err)
             var stop = collector(item, value)
             if (stop) {
@@ -46,6 +51,7 @@ module.exports = function(f) {
               next()
             }
           })
+          f.apply(null, argmnts)
         } else {
           finish(callback)
         }
@@ -55,7 +61,7 @@ module.exports = function(f) {
   }
 
   tx.each = function(f) {
-    collect(f,
+    collect(arguments,
       function(item, value) {},
       function(callback) {
         callback(null)
@@ -66,10 +72,11 @@ module.exports = function(f) {
 
   tx.map = function(f) {
     var result = []
-    collect(f,
+    collect(arguments,
       function(item, value) {
         result.push(value)
-      }, function(callback) {
+      },
+      function(callback) {
         callback(null, result)
       }
     )
@@ -78,12 +85,13 @@ module.exports = function(f) {
 
   tx.reject = function(f) {
     var result = []
-    collect(f,
+    collect(arguments,
       function(item, value) {
         if (!value) {
           result.push(item)
         }
-      }, function(callback) {
+      },
+      function(callback) {
         callback(null, result)
       }
     )
@@ -92,12 +100,13 @@ module.exports = function(f) {
 
   tx.filter = function(f) {
     var result = []
-    collect(f,
+    collect(arguments,
       function(item, value) {
         if (value) {
           result.push(item)
         }
-      }, function(callback) {
+      },
+      function(callback) {
         callback(null, result)
       }
     )
@@ -106,13 +115,14 @@ module.exports = function(f) {
 
   tx.detect = function(f) {
     var detected
-    collect(f,
+    collect(arguments,
       function(item, value) {
         if (value) {
           detected = item
           return true
         }
-      }, function(callback) {
+      },
+      function(callback) {
         callback(null, detected)
       }
     )
@@ -121,10 +131,11 @@ module.exports = function(f) {
 
   tx.concat = function(f) {
     var result = []
-    collect(f,
+    collect(arguments,
       function(item, value) {
         result = result.concat(value)
-      }, function(callback) {
+      },
+      function(callback) {
         callback(null, result)
       }
     )
@@ -132,6 +143,35 @@ module.exports = function(f) {
   }
 
   tx.then = function(f) {
+    chain.push(f)
+    return tx
+  }
+
+  tx.clean = function() {
+    chain.push(function(callback) {
+      callback()
+    })
+    return tx
+  }
+ 
+  tx.debug = function(message, trace) {
+    message = message || 'Debug'
+    var f = function() {
+      var args = Array.prototype.slice.call(arguments)
+      var callback = args.pop()
+      var obj = {}
+      Error.captureStackTrace(obj)
+      if (trace) {
+        console.trace(message)
+      } else {
+        console.log(message)
+      }
+      args.forEach(function(arg) {
+        console.dir(arg)
+      })
+      callback.apply(this, [null].concat(args))
+    }
+    f.debug = true
     chain.push(f)
     return tx
   }
@@ -154,7 +194,16 @@ module.exports = function(f) {
   }
  
   if (typeof f === 'function') {
-    tx.then(f)
+    if (arguments.length === 1) {
+      tx.then(f)
+    } else {
+      var args = Array.prototype.slice.call(arguments)
+      args.shift() // removes f
+      tx.then(function(callback) {
+        args.push(callback)
+        f.apply(null, args)
+      })
+    }
   } else {
     initial = [null].concat(Array.prototype.slice.call(arguments))
   }

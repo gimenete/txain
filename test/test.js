@@ -1,6 +1,8 @@
 var txain = require('../')
 var assert = require('assert')
 var _ = require('underscore')
+var fs = require('fs')
+var path = require('path')
 
 describe('Test the whole thing', function() {
 
@@ -216,6 +218,87 @@ describe('Test the whole thing', function() {
         assert.ifError(err)
         done()
       })
+
+  })
+
+  it('lets create a txain with a function and arguments', function(done) {
+
+    var f = function(a, b, callback) {
+      callback(null, a, b)
+    }
+
+    txain(f, 'a', 'b')
+      .then(function(a, b, c, callback) {
+        assert.equal(a, 'a')
+        assert.equal(b, 'b')
+        callback()
+      }).end(function(err) {
+        assert.ifError(err)
+        done()
+      })
+
+  })
+
+  it('tests the clean() function', function(done) {
+
+    txain(function(callback) {
+      callback(null, 'a', 'b', 'c')
+    })
+    .clean()
+    .then(function(a, b, c, callback) {
+      assert.equal(a, undefined)
+      assert.equal(b, undefined)
+      assert.equal(c, undefined)
+      callback(null)
+    }).end(function(err, a) {
+      assert.equal(a, undefined)
+      done()
+    })
+
+  })
+
+  it('tests the debug() function', function(done) {
+
+    txain(function(callback) {
+      callback(null, 'a', 'b', 'c')
+    })
+    .debug('This is a debug message')
+    .debug()
+    .end(function(err, a, b, c) {
+      assert.equal(a, 'a')
+      assert.equal(b, 'b')
+      assert.equal(c, 'c')
+      done()
+    })
+
+  })
+
+  it('tests the debug() function with trace=true', function(done) {
+
+    txain(function(callback) {
+      callback(null, 'a', 'b', 'c')
+    })
+    .debug('This is a debug message', true)
+    .debug()
+    .end(function(err, a, b, c) {
+      assert.equal(a, 'a')
+      assert.equal(b, 'b')
+      assert.equal(c, 'c')
+      done()
+    })
+
+  })
+
+  it('tests passing additional arguments to collection functions', function(done) {
+
+    txain([__filename, path.join(__dirname, '..', 'index.js')])
+    .map(fs.readFile, 'utf8')
+    .end(function(err, arr) {
+      assert.ifError(err)
+      assert.ok(!Buffer.isBuffer(arr[0]))
+      assert.ok(!Buffer.isBuffer(arr[1]))
+      done()
+    })
 
   })
 
