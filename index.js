@@ -33,11 +33,9 @@ module.exports = function(f) {
   }
 
   function collect(args, collector, finish) {
-    var args = Array.prototype.slice.call(args)
+    args = Array.prototype.slice.call(args)
     var f = args.shift()
     chain.push(function(items, callback) {
-      var result = []
-
       function next() {
         if (items.length > 0) {
           var item = items.shift()
