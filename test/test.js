@@ -302,4 +302,23 @@ describe('Test the whole thing', function() {
 
   })
 
+  it('tests that txain does not modify the original array', function(done) {
+
+    var iterations = 0
+    var arr = ['aa', 'ab', 'bc']
+    txain(arr)
+      .each(function(item, callback) {
+        iterations++
+        callback()
+      }).then(function(callback) {
+        callback()
+      }).end(function(err) {
+        assert.ifError(err)
+        assert.equal(iterations, 3)
+        assert.equal(arr.length, 3)
+        done()
+      })
+
+  })
+
 })
