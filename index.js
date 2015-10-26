@@ -27,7 +27,12 @@ module.exports = function(f) {
           }
         }
         args.push(callNext)
-        f.apply(tx, args)
+        var promise = f.apply(tx, args)
+        if (promise && typeof promise.then === 'function' && typeof promise.catch === 'function') {
+          promise.then(function() {
+            callNext.apply(tx, [null].concat(Array.prototype.slice.call(arguments)))
+          }).catch(callNext)
+        }
       }
     }
   }
