@@ -1,13 +1,14 @@
 {
   "name": "txain",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A simple module for async control flow",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "node node_modules/.bin/_mocha -R spec"
+    "test": "mocha test",
+    "coverage": "nyc npm test"
   },
   "repository": {
     "type": "git",
@@ -27,5 +28,9 @@
     "istanbul": "^0.3.2",
     "mocha": "^1.21.4",
     "underscore": "^1.7.0"
+  },
+  "dependencies": {
+    "mocha": "^2.3.4",
+    "nyc": "^5.1.1"
   }
 }

@@ -4,7 +4,13 @@ module.exports = function(f) {
   var end = null
   var values = {}
   var initial = null
- 
+
+  function isPromise(promise) {
+    return promise
+      && typeof promise.then === 'function'
+      && typeof promise.catch === 'function'
+  }
+
   function callNext() {
     var f = chain.shift()
     if (!f) {
@@ -28,7 +34,7 @@ module.exports = function(f) {
         }
         args.push(callNext)
         var promise = f.apply(tx, args)
-        if (promise && typeof promise.then === 'function' && typeof promise.catch === 'function') {
+        if (isPromise(promise)) {
           promise.then(function() {
             callNext.apply(tx, [null].concat(Array.prototype.slice.call(arguments)))
           }).catch(callNext)
@@ -46,16 +52,22 @@ module.exports = function(f) {
         if (items.length > i) {
           var item = items[i++]
           var argmnts = [item].concat(args)
-          argmnts.push(function(err, value) {
+          var cb = function(err, value) {
             if (err) return end.call(tx, err)
             var stop = collector(item, value)
             if (stop) {
               finish(callback)
             } else {
-              next()
+              process.nextTick(next) // avoid exceeding maximum call stack size
             }
-          })
-          f.apply(null, argmnts)
+          }
+          argmnts.push(cb)
+          var promise = f.apply(null, argmnts)
+          if (isPromise(promise)) {
+            promise.then(function() {
+              cb.apply(null, [null].concat(Array.prototype.slice.call(arguments)))
+            }).catch(cb)
+          }
         } else {
           finish(callback)
         }
@@ -157,7 +169,7 @@ module.exports = function(f) {
     })
     return tx
   }
- 
+
   tx.debug = function(message, trace) {
     message = message || 'Debug'
     var f = function() {
@@ -179,7 +191,7 @@ module.exports = function(f) {
     chain.push(f)
     return tx
   }
- 
+
   tx.end = function(f) {
     end = f
     if (initial) {
@@ -196,7 +208,7 @@ module.exports = function(f) {
   tx.get = function(key) {
     return values[key]
   }
- 
+
   if (typeof f === 'function') {
     if (arguments.length === 1) {
       tx.then(f)

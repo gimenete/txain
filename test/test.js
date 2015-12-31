@@ -7,7 +7,6 @@ var path = require('path')
 describe('Test the whole thing', function() {
 
   it('jumps to end() when an error occurs', function(done) {
-
     txain(function(callback) {
       callback(new Error('some error'))
     }).then(function(a, b, callback) {
@@ -16,11 +15,9 @@ describe('Test the whole thing', function() {
       assert.ok(err)
       done()
     })
-
   })
 
   it('works with less or more arguments', function(done) {
-
     txain(function(callback) {
       callback(null, 'a', 'b', 'c')
     }).then(function(a, b, callback) {
@@ -35,11 +32,9 @@ describe('Test the whole thing', function() {
       assert.equal(a, undefined)
       done()
     })
-
   })
 
   it('sets and gets values from the chain', function(done) {
-
     txain(function(callback) {
       this.set('foo', 100)
       callback()
@@ -53,11 +48,9 @@ describe('Test the whole thing', function() {
       assert.equal(this.get('foo'), 100)
       done()
     })
-
   })
 
   it('implements the each function', function(done) {
-
     var iterations = 0
     txain(function(callback) {
       callback(null, ['aa', 'ab', 'bc'])
@@ -73,11 +66,9 @@ describe('Test the whole thing', function() {
       assert.equal(iterations, 3)
       done()
     })
-
   })
 
   it('implements the map function', function(done) {
-
     txain(function(callback) {
       callback(null, ['a', 'b', 'c'])
     }).map(function(item, callback) {
@@ -90,11 +81,9 @@ describe('Test the whole thing', function() {
       assert.ifError(err)
       done()
     })
-
   })
 
   it('implements the filter function', function(done) {
-
     txain(function(callback) {
       callback(null, ['aa', 'ab', 'bc'])
     }).filter(function(item, callback) {
@@ -107,11 +96,9 @@ describe('Test the whole thing', function() {
       assert.ifError(err)
       done()
     })
-
   })
 
   it('implements the reject function', function(done) {
-
     txain(function(callback) {
       callback(null, ['aa', 'ab', 'bc'])
     }).reject(function(item, callback) {
@@ -124,11 +111,9 @@ describe('Test the whole thing', function() {
       assert.ifError(err)
       done()
     })
-
   })
 
   it('implements the concat function', function(done) {
-
     txain(function(callback) {
       callback(null, ['a', 'b', 'c'])
     }).concat(function(item, callback) {
@@ -141,11 +126,9 @@ describe('Test the whole thing', function() {
       assert.ifError(err)
       done()
     })
-
   })
 
   it('implements the detect function', function(done) {
-
     var iterations = 0
     txain(function(callback) {
       callback(null, ['aa', 'ab', 'bc'])
@@ -161,11 +144,9 @@ describe('Test the whole thing', function() {
       assert.equal(iterations, 2)
       done()
     })
-
   })
 
   it('runs the end() function when an error happens iterating', function(done) {
-
     var iterations = 0
     txain(function(callback) {
       callback(null, ['aa', 'ab', 'bc'])
@@ -182,11 +163,9 @@ describe('Test the whole thing', function() {
       assert.equal(iterations, 2)
       done()
     })
-
   })
 
   it('lets create a txain with an array', function(done) {
-
     var iterations = 0
     txain(['aa', 'ab', 'bc'])
       .each(function(item, callback) {
@@ -200,11 +179,9 @@ describe('Test the whole thing', function() {
         assert.equal(iterations, 3)
         done()
       })
-
   })
 
   it('lets create a txain with any number of arguments', function(done) {
-
     txain('a', 'b', 'c')
       .then(function(a, b, c, callback) {
         assert.equal(a, 'a')
@@ -218,11 +195,9 @@ describe('Test the whole thing', function() {
         assert.ifError(err)
         done()
       })
-
   })
 
   it('lets create a txain with a function and arguments', function(done) {
-
     var f = function(a, b, callback) {
       callback(null, a, b)
     }
@@ -236,11 +211,9 @@ describe('Test the whole thing', function() {
         assert.ifError(err)
         done()
       })
-
   })
 
   it('tests the clean() function', function(done) {
-
     txain(function(callback) {
       callback(null, 'a', 'b', 'c')
     })
@@ -254,11 +227,9 @@ describe('Test the whole thing', function() {
       assert.equal(a, undefined)
       done()
     })
-
   })
 
   it('tests the debug() function', function(done) {
-
     txain(function(callback) {
       callback(null, 'a', 'b', 'c')
     })
@@ -270,11 +241,9 @@ describe('Test the whole thing', function() {
       assert.equal(c, 'c')
       done()
     })
-
   })
 
   it('tests the debug() function with trace=true', function(done) {
-
     txain(function(callback) {
       callback(null, 'a', 'b', 'c')
     })
@@ -286,11 +255,9 @@ describe('Test the whole thing', function() {
       assert.equal(c, 'c')
       done()
     })
-
   })
 
   it('tests passing additional arguments to collection functions', function(done) {
-
     txain([__filename, path.join(__dirname, '..', 'index.js')])
     .map(fs.readFile, 'utf8')
     .end(function(err, arr) {
@@ -299,11 +266,9 @@ describe('Test the whole thing', function() {
       assert.ok(!Buffer.isBuffer(arr[1]))
       done()
     })
-
   })
 
   it('tests that txain does not modify the original array', function(done) {
-
     var iterations = 0
     var arr = ['aa', 'ab', 'bc']
     txain(arr)
@@ -318,7 +283,112 @@ describe('Test the whole thing', function() {
         assert.equal(arr.length, 3)
         done()
       })
+  })
 
+  it('tests basic usage with promises', function(done) {
+    txain(function(callback) {
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          resolve('hello world')
+        }, 1)
+      })
+    })
+    .then(function(msg, callback) {
+      assert.equal(msg, 'hello world')
+      callback()
+    })
+    .end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+  })
+
+  it('tests errors with promises', function(done) {
+    txain(function(callback) {
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          reject(new Error('some error'))
+        }, 1)
+      })
+    })
+    .then(function(msg, callback) {
+      assert.fail('This function should not be called')
+    })
+    .end(function(err) {
+      assert.ok(err)
+      done()
+    })
+  })
+
+  it('tests collections with promises', function(done) {
+    var n = 0
+    var arr = ['1', '2', '3']
+    txain(function(callback) {
+      return callback(null, arr)
+    })
+    .map(function(elem, callback) {
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          resolve(elem)
+        }, 1)
+      })
+    })
+    .then(function(elements, callback) {
+      assert.equal(arr.length, elements.length)
+      for (var i=0; i<arr.length; i++) {
+        assert.equal(elements[0], arr[0])
+      }
+      callback()
+    })
+    .end(function(err) {
+      assert.ifError(err)
+      done()
+    })
+  })
+
+  it('tests collections with promises handling errors', function(done) {
+    var n = 0
+    var arr = ['1', '2', '3']
+    var elements = []
+    txain(function(callback) {
+      return callback(null, arr)
+    })
+    .map(function(elem, callback) {
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          if (elem === '2') {
+            return reject(new Error('some error'))
+          }
+          elements.push(elem)
+          resolve(elem)
+        }, 1)
+      })
+    })
+    .then(function(elements, callback) {
+      assert.fail('This function should not be called')
+    })
+    .end(function(err) {
+      assert.ok(err)
+      assert.equal(elements.length, 1)
+      assert.equal(elements[0], '1')
+      done()
+    })
+  })
+
+  it('tests thosands of elements in a collection', function(done) {
+    var iterations = 0
+    var arr = []
+    for (var i=0; i<10000; i++) arr.push('-')
+    txain(function(callback) {
+      callback(null, arr)
+    }).each(function(item, callback) {
+      iterations++
+      callback()
+    }).end(function(err) {
+      assert.ifError(err)
+      assert.equal(iterations, i)
+      done()
+    })
   })
 
 })
