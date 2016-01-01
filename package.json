@@ -1,6 +1,6 @@
 {
   "name": "txain",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A simple module for async control flow",
   "main": "index.js",
   "directories": {
@@ -16,7 +16,8 @@
   },
   "keywords": [
     "async",
-    "flow"
+    "flow",
+    "promise"
   ],
   "author": "Alberto Gimeno",
   "license": "MIT",

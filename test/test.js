@@ -391,4 +391,60 @@ describe('Test the whole thing', function() {
     })
   })
 
+  it('tests returning a promise on .end()', function(done) {
+    var promise =
+      txain(function(callback) {
+        setTimeout(function() {
+          callback(null, 'hello world')
+        }, 1)
+      }).end()
+
+    promise.then(function(msg) {
+      assert.equal(msg, 'hello world')
+      done()
+    })
+    .catch(function(err) {
+      assert.fail('This function should not be called')
+    })
+  })
+
+  it('tests returning a promise on .end() and failing', function(done) {
+    var promise =
+      txain(function(callback) {
+        setTimeout(function() {
+          callback(new Error('some error'))
+        }, 1)
+      }).end()
+
+    promise.then(function(msg) {
+      assert.fail('This function should not be called')
+    })
+    .catch(function(err) {
+      assert.ok(err)
+      done()
+    })
+  })
+
+  it('tests combining promises with initial function passed to txain()', function(done) {
+    txain(fs.readFile, __filename, 'utf8').end()
+      .then(function(content) {
+        assert.ok(content)
+        done()
+      })
+      .catch(function(err) {
+        assert.fail('This function should not be called')
+      })
+  })
+
+  it('tests combining promises with initial function passed to txain() and fails', function(done) {
+    txain(fs.readFile, __filename, 'utf8').end()
+      .then(function(content) {
+        assert.fail('This function should not be called')
+      })
+      .catch(function(err) {
+        assert.ok(err)
+        done()
+      })
+  })
+
 })

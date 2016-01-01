@@ -193,12 +193,21 @@ module.exports = function(f) {
   }
 
   tx.end = function(f) {
+    if (!f) {
+      var promise = new Promise(function(resolve, reject) {
+        f = function(err, result) {
+          if (err) return reject(err)
+          resolve(result)
+        }
+      })
+    }
     end = f
     if (initial) {
       callNext.apply(null, initial)
     } else {
       callNext()
     }
+    return promise
   }
 
   tx.set = function(key, value) {

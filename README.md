@@ -39,6 +39,7 @@ txain let's you organize your code like this:
 * When an error is passed to a `callback` or a promise fails then the `end()` function is called with that error and no more `then()` functions are called.
 * When all the `then()` functions are called then `end()` is called with a `null` error and the rest of arguments passed by the latest `then()` function.
 * txain automatically adjusts the number of arguments passed to the next function.
+* If you don't pass a function to the `end()` method it returns a promise.
 
 ## A near-real-world example
 
@@ -169,6 +170,12 @@ txain(['foo.txt', 'bar.txt'])
   if (err) return console.log('Error: '+err)
   console.log('Done', files)
 })
+```
+
+Combining this way of creating a `taxin` and the ability to return a promise on `.end()` if you don't pass any arguments you can create promises easily based on callback-based async functions like this.
+
+```javascript
+var promise = txain(fs.readFile, __filename, 'utf8').end()
 ```
 
 ## Utility functions
